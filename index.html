@@ -207,6 +207,25 @@
 
   .done p {
     font-size: 15px;
+    margin: 0 0 12px;
+  }
+
+  .done-path {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--accent);
+    word-break: break-all;
+    background: var(--accent-soft);
+    border-radius: 2px;
+    padding: 10px 12px;
+    margin: 0 0 20px;
+  }
+
+  .done-img {
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 2px;
+    border: 1px solid var(--line);
     margin: 0 0 20px;
   }
 
@@ -223,22 +242,7 @@
   <p class="eyebrow">Upload</p>
   <h1>Send a picture.</h1>
 
-  <!-- Netlify Forms: static detection form (required once per site so Netlify's
-       build bot registers this form name — kept hidden, never shown to visitors) -->
-  <form name="picture-upload" data-netlify="true" enctype="multipart/form-data" hidden>
-    <input type="text" name="name" />
-    <input type="file" name="picture" />
-  </form>
-
-  <form
-    id="uploadForm"
-    name="picture-upload"
-    method="POST"
-    data-netlify="true"
-    enctype="multipart/form-data"
-  >
-    <input type="hidden" name="form-name" value="picture-upload" />
-
+  <form id="uploadForm" enctype="multipart/form-data">
     <div class="dropzone" id="dropzone">
       <svg class="dropzone-icon" viewBox="0 0 24 24">
         <path d="M12 15V4M12 4L7 9M12 4l5 5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -268,6 +272,8 @@
       <path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
     <p>Received. Thanks.</p>
+    <img class="done-img" id="doneImg" alt="Uploaded picture" />
+    <p class="done-path" id="donePath"></p>
     <button type="button" id="resetBtn">Upload another</button>
   </div>
 </main>
@@ -283,7 +289,12 @@
   const submitBtn = document.getElementById('submitBtn');
   const statusText = document.getElementById('statusText');
   const done = document.getElementById('done');
+  const doneImg = document.getElementById('doneImg');
+  const donePath = document.getElementById('donePath');
   const resetBtn = document.getElementById('resetBtn');
+
+  // Change this if upload.php lives somewhere other than alongside this page.
+  const UPLOAD_ENDPOINT = 'upload.php';
 
   function formatSize(bytes) {
     if (bytes < 1024) return bytes + ' B';
@@ -339,17 +350,24 @@
 
     const data = new FormData(form);
 
-    fetch('/', {
+    fetch(UPLOAD_ENDPOINT, {
       method: 'POST',
       body: data,
     })
-      .then((res) => {
-        if (!res.ok) throw new Error('Upload failed');
+      .then(async (res) => {
+        const result = await res.json();
+        if (!res.ok || !result.ok) {
+          throw new Error(result.error || 'Upload failed');
+        }
+        // result.path -> path relative to the site (e.g. "uploads/ab12cd34_170..._jpg")
+        // result.url  -> full public URL to fetch the image back
+        doneImg.src = result.url;
+        donePath.textContent = result.path;
         form.classList.add('is-submitted');
         done.classList.add('is-visible');
       })
-      .catch(() => {
-        statusText.textContent = 'Something went wrong. Try again.';
+      .catch((err) => {
+        statusText.textContent = err.message || 'Something went wrong. Try again.';
         statusText.className = 'status is-error';
         submitBtn.disabled = false;
       });
