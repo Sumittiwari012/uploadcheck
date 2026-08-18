@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Upload</title>
+<style>
+  :root {
+    --ink: #1c1a17;
+    --paper: #f6f4ef;
+    --line: #d8d3c7;
+    --accent: #2f5233;
+    --accent-soft: #eef2ec;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  main {
+    width: 100%;
+    max-width: 480px;
+  }
+
+  .eyebrow {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 8px;
+  }
+
+  h1 {
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 1.15;
+    margin: 0 0 32px;
+    letter-spacing: -0.01em;
+  }
+
+  form {
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    background: #fff;
+  }
+
+  .dropzone {
+    position: relative;
+    padding: 48px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .dropzone.is-dragover {
+    background: var(--accent-soft);
+  }
+
+  .dropzone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .dropzone-icon {
+    width: 34px;
+    height: 34px;
+    margin: 0 auto 16px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 1.3;
+  }
+
+  .dropzone-label {
+    font-size: 15px;
+    margin: 0 0 4px;
+  }
+
+  .dropzone-sub {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 11px;
+    color: #8a8478;
+    letter-spacing: 0.03em;
+    margin: 0;
+  }
+
+  .preview {
+    display: none;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+    align-items: center;
+    gap: 14px;
+  }
+
+  .preview.is-visible {
+    display: flex;
+  }
+
+  .preview img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .preview-text {
+    min-width: 0;
+  }
+
+  .preview-name {
+    font-size: 14px;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .preview-size {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 11px;
+    color: #8a8478;
+    margin: 0;
+  }
+
+  .actions {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: 0.02em;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 2px;
+    padding: 11px 22px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+  }
+
+  button:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  button:not(:disabled):hover {
+    opacity: 0.88;
+  }
+
+  .status {
+    font-family: 'Courier New', ui-monospace, monospace;
+    font-size: 11px;
+    color: #8a8478;
+    letter-spacing: 0.03em;
+  }
+
+  .status.is-success { color: var(--accent); }
+  .status.is-error { color: #a13a2c; }
+
+  .done {
+    display: none;
+    padding: 48px 24px;
+    text-align: center;
+  }
+
+  .done.is-visible { display: block; }
+
+  form.is-submitted .dropzone,
+  form.is-submitted .preview,
+  form.is-submitted .actions {
+    display: none;
+  }
+
+  .done-icon {
+    width: 30px;
+    height: 30px;
+    margin: 0 auto 16px;
+    stroke: var(--accent);
+    fill: none;
+    stroke-width: 1.4;
+  }
+
+  .done p {
+    font-size: 15px;
+    margin: 0 0 20px;
+  }
+
+  .done button {
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<main>
+  <p class="eyebrow">Upload</p>
+  <h1>Send a picture.</h1>
+
+  <!-- Netlify Forms: static detection form (required once per site so Netlify's
+       build bot registers this form name — kept hidden, never shown to visitors) -->
+  <form name="picture-upload" data-netlify="true" enctype="multipart/form-data" hidden>
+    <input type="text" name="name" />
+    <input type="file" name="picture" />
+  </form>
+
+  <form
+    id="uploadForm"
+    name="picture-upload"
+    method="POST"
+    data-netlify="true"
+    enctype="multipart/form-data"
+  >
+    <input type="hidden" name="form-name" value="picture-upload" />
+
+    <div class="dropzone" id="dropzone">
+      <svg class="dropzone-icon" viewBox="0 0 24 24">
+        <path d="M12 15V4M12 4L7 9M12 4l5 5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <p class="dropzone-label">Drop a picture here, or click to choose</p>
+      <p class="dropzone-sub">JPG · PNG · HEIC · GIF</p>
+      <input type="file" name="picture" id="fileInput" accept="image/*" required />
+    </div>
+
+    <div class="preview" id="preview">
+      <img id="previewImg" alt="" />
+      <div class="preview-text">
+        <p class="preview-name" id="previewName"></p>
+        <p class="preview-size" id="previewSize"></p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button type="submit" id="submitBtn" disabled>Upload</button>
+      <span class="status" id="statusText"></span>
+    </div>
+  </form>
+
+  <div class="done" id="done">
+    <svg class="done-icon" viewBox="0 0 24 24">
+      <path d="M4 12l5 5L20 6" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    <p>Received. Thanks.</p>
+    <button type="button" id="resetBtn">Upload another</button>
+  </div>
+</main>
+
+<script>
+  const form = document.getElementById('uploadForm');
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const preview = document.getElementById('preview');
+  const previewImg = document.getElementById('previewImg');
+  const previewName = document.getElementById('previewName');
+  const previewSize = document.getElementById('previewSize');
+  const submitBtn = document.getElementById('submitBtn');
+  const statusText = document.getElementById('statusText');
+  const done = document.getElementById('done');
+  const resetBtn = document.getElementById('resetBtn');
+
+  function formatSize(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function showFile(file) {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    previewImg.src = url;
+    previewName.textContent = file.name;
+    previewSize.textContent = formatSize(file.size);
+    preview.classList.add('is-visible');
+    submitBtn.disabled = false;
+    statusText.textContent = '';
+    statusText.className = 'status';
+  }
+
+  fileInput.addEventListener('change', () => {
+    showFile(fileInput.files[0]);
+  });
+
+  ['dragenter', 'dragover'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.add('is-dragover');
+    });
+  });
+
+  ['dragleave', 'drop'].forEach(evt => {
+    dropzone.addEventListener(evt, (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('is-dragover');
+    });
+  });
+
+  dropzone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      fileInput.files = e.dataTransfer.files;
+      showFile(file);
+    }
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (!fileInput.files.length) return;
+
+    submitBtn.disabled = true;
+    statusText.textContent = 'Uploading…';
+    statusText.className = 'status';
+
+    const data = new FormData(form);
+
+    fetch('/', {
+      method: 'POST',
+      body: data,
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Upload failed');
+        form.classList.add('is-submitted');
+        done.classList.add('is-visible');
+      })
+      .catch(() => {
+        statusText.textContent = 'Something went wrong. Try again.';
+        statusText.className = 'status is-error';
+        submitBtn.disabled = false;
+      });
+  });
+
+  resetBtn.addEventListener('click', () => {
+    form.reset();
+    form.classList.remove('is-submitted');
+    done.classList.remove('is-visible');
+    preview.classList.remove('is-visible');
+    submitBtn.disabled = true;
+    statusText.textContent = '';
+  });
+</script>
+
+</body>
+</html>
